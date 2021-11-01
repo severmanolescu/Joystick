@@ -14,6 +14,10 @@ int numarButoane = 8;
 
 int buttonPin[8] = {3, 4, 5, 6, 9, 10, 11, 12};
 
+Gains mygains[2];
+EffectParams myeffectparams[2];
+int32_t forces[2] = {0};
+
 void setup() {
   // Initialize Button Pins
 
@@ -21,6 +25,8 @@ void setup() {
   {
     pinMode(i, INPUT_PULLUP);
   }
+
+  pinMode(13, OUTPUT);
 
   // Initialize Joystick Library
   Joystick.begin();
@@ -31,6 +37,11 @@ void setup() {
 
   Joystick.setRxAxisRange(0, 1023);
   Joystick.setRyAxisRange(0, 1023);
+
+   mygains[0].totalGain = 100;
+   mygains[0].springGain = 100;
+
+   Joystick.setGains(mygains);
 }
 
 
@@ -67,6 +78,17 @@ void loop() {
 
   Joystick.setRxAxis(1023 - xRange);
   Joystick.setRyAxis(1023 - yRange);
-  
-  delay(5);
+
+  int value = analogRead(A2);
+  //set X Axis Spring Effect Param
+  myeffectparams[0].springMaxPosition = 1023;
+  myeffectparams[0].springPosition = value;
+
+  Joystick.setEffectParams(myeffectparams);
+  Joystick.getForce(forces);
+  if(forces[0] > 0){
+    digitalWrite(13,HIGH);
+  }else{
+    digitalWrite(13,LOW);
+  }
 }

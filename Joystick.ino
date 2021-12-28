@@ -2,25 +2,24 @@
 #include <Keyboard.h>
 
 Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_JOYSTICK ,
-  8, 0,                  // Button Count, Hat Switch Count
+  10, 0,                  // Button Count, Hat Switch Count
   true, true, false,     // X and Y, but no Z Axis
   true, true, false,   // No Rx, Ry, or Rz
   false, false,          // No rudder or throttle
   false, false, false);  // No accelerator, brake, or steering
 
-int lastButtonState[8] = {0,0,0,0,0,0,0};
+int lastButtonState[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int lastLastButtonState[2] = {0, 0};
 
-int numarButoane = 8;
+int numarButoane = 10;
 
-int buttonPin[8] = {3, 4, 5, 6, 9, 10, 11, 12};
+int buttonPin[10] = {3, 4, 5, 6, 9, 10, 11, 12, 8, 2};
 
 Gains mygains[2];
 EffectParams myeffectparams[2];
 int32_t forces[2] = {0};
 
 void setup() {
-  // Initialize Button Pins
-
   for(int i = 0; i < numarButoane; i++)
   {
     pinMode(i, INPUT_PULLUP);
@@ -28,7 +27,6 @@ void setup() {
 
   pinMode(13, OUTPUT);
 
-  // Initialize Joystick Library
   Joystick.begin();
   Keyboard.begin();
   
@@ -49,12 +47,47 @@ void setup() {
 void loop() {
   for(int i = 0; i < numarButoane; i++)
   {
-    int currentButtonState = !digitalRead(buttonPin[i]);
+    int currentButtonState;
     
-    if (currentButtonState != lastButtonState[i])
+    if(i == numarButoane - 2)
     {
-      Joystick.setButton(i, currentButtonState);
-      lastButtonState[i] = currentButtonState;
+      int valoare = analogRead(A0);
+
+      if (valoare == lastButtonState[i] && valoare == lastLastButtonState[0] && valoare == 1023)
+      {
+        Joystick.setButton(i, 0);
+      }
+      else
+      {
+        Joystick.setButton(i, 1);
+      }
+      lastLastButtonState[0] = lastButtonState[i];
+      lastButtonState[i] = valoare;
+    }
+    else if(i == numarButoane - 1)
+    {
+      int valoare = analogRead(A1);
+      
+      if (valoare == lastButtonState[i] && valoare == lastLastButtonState[1] && valoare == 1023)
+      {
+        Joystick.setButton(i, 0);
+      }
+      else
+      {
+        Joystick.setButton(i, 1);
+      }
+      lastLastButtonState[1] = lastButtonState[i];
+      lastButtonState[i] = valoare;
+    }
+    else
+    {
+      currentButtonState = !digitalRead(buttonPin[i]);
+
+      if (currentButtonState != lastButtonState[i])
+      {
+        Joystick.setButton(i, currentButtonState);
+        lastButtonState[i] = currentButtonState;
+      }
     }
   }
   
@@ -80,7 +113,7 @@ void loop() {
   Joystick.setRyAxis(1023 - yRange);
 
   int value = analogRead(A2);
-  //set X Axis Spring Effect Param
+
   myeffectparams[0].springMaxPosition = 1023;
   myeffectparams[0].springPosition = value;
 
